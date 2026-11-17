@@ -19,7 +19,12 @@
 | Мова розробки | Java |
 | Основний фреймворк | Spring Boot |
 
-**Склад команди:** буде доповнено після узгодження розподілу завдань.
+**Склад команди:**
+
+- Постнікова Олена ([@elllenoshka](https://github.com/elllenoshka))
+- Мирошниченко Владислав ([@vladmyroshnychenko](https://github.com/vladmyroshnychenko))
+- Чех Ірина ([@irina-chekhkh](https://github.com/irina-chekhkh))
+- Мелєщук Єлізавета ([@MamaUtka](https://github.com/MamaUtka))
 
 ## 2. Проєкт
 
@@ -304,12 +309,12 @@ DPC відповідає за оброблення закладання поси
 
 ## 9. Внесок учасників
 
-| Учасник | Внесок |
+| Учасник | Реалізовані пункти й виконані досліди |
 |---|---|
-| @ellenoshka | Створення GitHub-репозиторію, початкової структури, README, `.gitignore` та `.env.example` |
-| Учасник 2 | Буде заповнено |
-| Учасник 3 | Буде заповнено |
-| Учасник 4 | Буде заповнено |
+| Постнікова Олена ([@elllenoshka](https://github.com/elllenoshka)) | Створення GitHub-репозиторію, початкової структури, README, `.gitignore` та `.env.example` |
+| Мирошниченко Владислав ([@vladmyroshnychenko](https://github.com/vladmyroshnychenko)) | Буде доповнено |
+| Чех Ірина ([@irina-chekhkh](https://github.com/irina-chekhkh)) | Буде доповнено |
+| Мелєщук Єлізавета ([@MamaUtka](https://github.com/MamaUtka)) | Буде доповнено |
 
 Розподіл лабораторних робіт і внесок кожного учасника будуть уточнюватися в процесі розроблення.
 
