@@ -1,0 +1,41 @@
+### 1. Health (без токена, очікуємо 200)
+GET http://localhost:8000/health
+
+### 2. Без токена (очікуємо 401)
+GET http://localhost:8000/v1/locker-cells/locker-001
+
+### 3. Стан ресурсу (очікуємо 200, invariant_ok = true)
+GET http://localhost:8000/v1/locker-cells/locker-001
+Authorization: Bearer dev-token
+
+### 4. Закладання (очікуємо 202, state = queued, заголовок Location)
+POST http://localhost:8000/v1/drop-offs
+Authorization: Bearer dev-token
+Content-Type: application/json
+
+{"drop_id": "d-1", "parcel_id": "p-1", "locker_id": "locker-001", "size": "M"}
+
+### 5. Той самий drop_id ще раз (очікуємо 202 і той самий запис)
+POST http://localhost:8000/v1/drop-offs
+Authorization: Bearer dev-token
+Content-Type: application/json
+
+{"drop_id": "d-1", "parcel_id": "p-1", "locker_id": "locker-001", "size": "M"}
+
+### 6. Стан запиту (очікуємо 200)
+GET http://localhost:8000/v1/drop-offs/d-1
+Authorization: Bearer dev-token
+
+### 7. Невідомий поштомат (очікуємо 404)
+POST http://localhost:8000/v1/drop-offs
+Authorization: Bearer dev-token
+Content-Type: application/json
+
+{"drop_id": "d-2", "parcel_id": "p-2", "locker_id": "nope", "size": "M"}
+
+### 8. Неправильний розмір (очікуємо 400)
+POST http://localhost:8000/v1/drop-offs
+Authorization: Bearer dev-token
+Content-Type: application/json
+
+{"drop_id": "d-3", "parcel_id": "p-3", "locker_id": "locker-001", "size": "XL"}
