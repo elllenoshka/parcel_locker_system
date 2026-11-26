@@ -128,7 +128,7 @@ paths:
           description: Identifier of the current user.
           schema:
             type: string
-          example: user-001
+          example: u-user-1
         - name: limit
           in: query
           required: false
@@ -212,14 +212,26 @@ paths:
         Parcel creation and cell reservation are performed atomically
         in one transaction.
       operationId: createParcel
+      x-course: main
       parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Repeat the same request with the same key to obtain the saved result.
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 128
+          examples:
+            reservation:
+              value: reserve-20261126-001
         - name: X-User-Id
           in: header
           required: true
           description: Identifier of the sender.
           schema:
             type: string
-          example: user-001
+          example: u-user-1
       requestBody:
         required: true
         content:
@@ -227,20 +239,29 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateParcelRequest'
             examples:
-              createSmallParcel:
-                summary: Create a small parcel
+              normal:
+                summary: Звичайне бронювання комірки S
                 value:
                   lockerId: locker-0001
                   recipientPhone: '+380501234567'
                   weightG: 1200
                   size: S
-              createMediumParcel:
-                summary: Create a medium parcel
+              scarce:
+                summary: Остання вільна комірка L у locker-0002
+                description: За початковими даними V2 у locker-0002 є одна комірка L.
                 value:
-                  lockerId: locker-0001
+                  lockerId: locker-0002
                   recipientPhone: '+380671234567'
                   weightG: 2500
-                  size: M
+                  size: L
+                x-capacity: 1
+              missing:
+                summary: Неіснуючий поштомат — очікується 404
+                value:
+                  lockerId: locker-does-not-exist
+                  recipientPhone: '+380501234567'
+                  weightG: 1200
+                  size: S
       responses:
         '201':
           description: Parcel created and cell reserved successfully.
