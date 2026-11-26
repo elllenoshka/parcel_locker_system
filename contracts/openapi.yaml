@@ -312,6 +312,84 @@ paths:
                     status: 422
                     detail: Parcel weight must be greater than zero.
 
+  /v1/parcels/{id}:
+    get:
+      tags:
+        - Parcels
+      summary: Get parcel by ID
+      description: Returns a parcel accessible to the current user.
+      operationId: getParcelById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Parcel identifier.
+          schema:
+            type: string
+          example: parcel-001
+        - name: X-User-Id
+          in: header
+          required: true
+          description: Identifier of the current user.
+          schema:
+            type: string
+          example: u-user-1
+      responses:
+        '200':
+          description: Parcel retrieved successfully.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParcelListItem'
+              examples:
+                parcel:
+                  summary: Reserved parcel
+                  value:
+                    id: parcel-001
+                    lockerId: locker-0001
+                    cellId: c01-02
+                    recipientPhone: '+380501234567'
+                    weightG: 1200
+                    size: M
+                    status: held
+                    createdAt: '2026-11-20T10:00:00Z'
+                    expiresAt: '2026-11-21T10:00:00Z'
+        '400':
+          description: Invalid parcel identifier.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                invalidId:
+                  value:
+                    type: about:blank
+                    title: Bad Request
+                    status: 400
+                    detail: Invalid parcel identifier.
+        '404':
+          description: Parcel not found or not accessible to the user.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                notFound:
+                  value:
+                    type: about:blank
+                    title: Not Found
+                    status: 404
+                    detail: Parcel not found.
+
 components:
   headers:
     X-Request-ID:
