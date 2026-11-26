@@ -62,6 +62,23 @@ paths:
       summary: Get lockers with available cells
       description: Returns lockers and the number of free cells for each size.
       operationId: getLockers
+      parameters:
+        - name: size
+          in: query
+          required: false
+          description: >-
+            Filter lockers by available cell size. When provided, return only
+            lockers with at least one free cell of the requested size.
+          schema:
+            type: string
+            enum:
+              - S
+              - M
+              - L
+          examples:
+            medium:
+              summary: Find lockers with available M cells
+              value: M
       responses:
         '200':
           description: List of lockers retrieved successfully.
