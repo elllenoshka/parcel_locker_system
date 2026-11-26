@@ -322,10 +322,10 @@ DPC відповідає за оброблення закладання поси
 
 | Учасник | Реалізовані пункти й виконані досліди |
 |---|---|
-| Постнікова Олена ([@elllenoshka](https://github.com/elllenoshka)) | Створення GitHub-репозиторію, початкової структури, README, `.gitignore` та `.env.example` |
-| Мирошниченко Владислав ([@vladmyroshnychenko](https://github.com/vladmyroshnychenko)) | Буде доповнено |
-| Чех Ірина ([@irina-chekhkh](https://github.com/irina-chekhkh)) | Буде доповнено |
-| Мелєщук Єлізавета ([@MamaUtka](https://github.com/MamaUtka)) | Буде доповнено |
+| Постнікова Олена ([@elllenoshka](https://github.com/elllenoshka)) | Створення репозиторію, початкової структури, оформлення README, `.gitignore` та `.env.example`; організація командної роботи |
+| Мирошниченко Владислав ([@vladmyroshnychenko](https://github.com/vladmyroshnychenko)) | У гілці `dpc-lab1` підготовлено API закладання посилок, обмежену чергу, пул обробників, модель ресурсу та SQL-міграцію для DPC ЛР1. Перевірки ще не підтверджені |
+| Чех Ірина ([@irina-chekhkh](https://github.com/irina-chekhkh)) | Створення початкових Spring Boot-проєктів, SQL-міграцій PostgreSQL, тестових даних і конфігурації Docker Compose; підготовка OpenAPI-контракту в гілці `DB-branch` |
+| Мелєщук Єлізавета ([@MamaUtka](https://github.com/MamaUtka)) | У гілці `frontend/web_page` підготовлено HTML/CSS-макет сторінки бронювання комірки. Підключення до API ще не виконано |
 
 Розподіл лабораторних робіт і внесок кожного учасника будуть уточнюватися в процесі розроблення.
 
