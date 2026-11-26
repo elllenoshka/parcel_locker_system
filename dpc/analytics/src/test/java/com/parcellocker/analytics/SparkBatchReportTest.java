@@ -42,7 +42,11 @@ class SparkBatchReportTest {
             lockers.write().parquet(lockersParquet.toString());
             var actual = SparkBatchReport.build(
                     spark.read().parquet(historyParquet.toString()),
-                    spark.read().parquet(lockersParquet.toString())).collectAsList();
+                    spark.read().parquet(lockersParquet.toString()))
+                    // Convert the SQL DATE to its ISO string for Java-side test assertions.
+                    // The actual Spark/Parquet report keeps the DATE type unchanged.
+                    .withColumn("day", org.apache.spark.sql.functions.col("day").cast("string"))
+                    .collectAsList();
 
             Map<String, ReferenceReport.ReportRow> expected = ReferenceReport.calculate(
                     fixtures.resolve("history.csv"), fixtures.resolve("lockers.csv"))
