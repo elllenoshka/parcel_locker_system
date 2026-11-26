@@ -1,0 +1,32 @@
+name: DPC LR4 Java analytics tests
+
+on:
+  push:
+    branches:
+      - feature/dpc-spark-olena
+    paths:
+      - 'dpc/analytics/**'
+      - '.github/workflows/dpc-java-analytics.yml'
+  pull_request:
+    paths:
+      - 'dpc/analytics/**'
+      - '.github/workflows/dpc-java-analytics.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  java-lr4:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: dpc/analytics/pom.xml
+      - name: Run Java reference and Spark parity tests
+        run: mvn -B -ntp -f dpc/analytics/pom.xml test
