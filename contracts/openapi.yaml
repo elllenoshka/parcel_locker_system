@@ -10,6 +10,9 @@ servers:
   - url: http://localhost:8080
     description: Local development server
 
+# До ЛР3 авторизація не застосовується; X-User-Id — навчальний заголовок.
+security: []
+
 tags:
   - name: Health
     description: Service health check
