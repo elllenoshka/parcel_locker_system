@@ -39,7 +39,8 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: UP
+                    examples:
+                      - UP
               examples:
                 healthy:
                   value:
@@ -419,13 +420,16 @@ components:
       properties:
         id:
           type: string
-          example: locker-0001
+          examples:
+            - locker-0001
         address:
           type: string
-          example: Sumskaya 150
+          examples:
+            - Sumskaya 150
         tz:
           type: string
-          example: Europe/Kyiv
+          examples:
+            - Europe/Kyiv
         freeCells:
           type: object
           required:
@@ -436,15 +440,18 @@ components:
             S:
               type: integer
               minimum: 0
-              example: 5
+              examples:
+                - 5
             M:
               type: integer
               minimum: 0
-              example: 3
+              examples:
+                - 3
             L:
               type: integer
               minimum: 0
-              example: 2
+              examples:
+                - 2
 
     ParcelListItem:
       type: object
@@ -461,20 +468,25 @@ components:
       properties:
         id:
           type: string
-          example: parcel-001
+          examples:
+            - parcel-001
         lockerId:
           type: string
-          example: locker-0001
+          examples:
+            - locker-0001
         cellId:
           type: string
-          example: cell-001
+          examples:
+            - cell-001
         recipientPhone:
           type: string
-          example: '+380501234567'
+          examples:
+            - '+380501234567'
         weightG:
           type: integer
           minimum: 1
-          example: 1200
+          examples:
+            - 1200
         size:
           type: string
           enum:
@@ -493,11 +505,13 @@ components:
         createdAt:
           type: string
           format: date-time
-          example: '2026-11-20T10:00:00Z'
+          examples:
+            - '2026-11-20T10:00:00Z'
         expiresAt:
           type: string
           format: date-time
-          example: '2026-11-21T10:00:00Z'
+          examples:
+            - '2026-11-21T10:00:00Z'
 
     ParcelListResponse:
       type: object
@@ -514,7 +528,8 @@ components:
             - string
             - 'null'
           description: Opaque cursor for the next page, or null if there are no more pages.
-          example: opaque-cursor-value
+          examples:
+            - opaque-cursor-value
 
     CreateParcelRequest:
       type: object
@@ -527,14 +542,17 @@ components:
       properties:
         lockerId:
           type: string
-          example: locker-0001
+          examples:
+            - locker-0001
         recipientPhone:
           type: string
-          example: '+380501234567'
+          examples:
+            - '+380501234567'
         weightG:
           type: integer
           minimum: 1
-          example: 1200
+          examples:
+            - 1200
         size:
           type: string
           enum:
@@ -553,23 +571,28 @@ components:
       properties:
         id:
           type: string
-          example: parcel-001
+          examples:
+            - parcel-001
         cellId:
           type: string
-          example: cell-001
+          examples:
+            - cell-001
         status:
           type: string
           enum:
             - held
-          example: held
+          examples:
+            - held
         createdAt:
           type: string
           format: date-time
-          example: '2026-11-20T10:00:00Z'
+          examples:
+            - '2026-11-20T10:00:00Z'
         expiresAt:
           type: string
           format: date-time
-          example: '2026-11-21T10:00:00Z'
+          examples:
+            - '2026-11-21T10:00:00Z'
 
     Problem:
       type: object
@@ -578,16 +601,20 @@ components:
         type:
           type: string
           format: uri-reference
-          example: about:blank
+          examples:
+            - about:blank
         title:
           type: string
-          example: Bad Request
+          examples:
+            - Bad Request
         status:
           type: integer
-          example: 400
+          examples:
+            - 400
         detail:
           type: string
-          example: The request is invalid.
+          examples:
+            - The request is invalid.
         instance:
           type: string
           format: uri-reference
