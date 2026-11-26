@@ -20,7 +20,7 @@
 | `GET /health` | Маршрут описано | Розділ Health |
 | `GET /v1/lockers` | Описано параметр `size` зі значеннями S, M, L та прикладом для M | Розділ Lockers → Parameters |
 | `GET /v1/parcels` | Описано список посилок із `limit` та `cursor` | Розділ Parcels |
-| `POST /v1/parcels` | Описано `X-User-Id`, приклади тіл для S та M | Parcels → Request body |
+| `POST /v1/parcels` | Описано `X-User-Id`, обов'язковий `Idempotency-Key`, приклади `normal` (S), `scarce` (L, `x-capacity: 1`), `missing` (404) | Контракт → Parcels → Request body; повторний огляд у Swagger потрібний |
 | `POST /v1/parcels` — успіх | Описано `201`, JSON-приклад і заголовок `Location` | Parcels → Responses |
 | `POST /v1/parcels` — помилки | Описано `400`, `404`, `409`, `422`; для помилок використано `application/problem+json` | Parcels → Responses, контракт |
 | `GET /v1/parcels/{id}` | Додано маршрут і приклади відповідей `200`, `400`, `404` | Parcels → Get parcel by ID |
@@ -38,6 +38,13 @@
 5. Розгорнути `GET /v1/lockers` і перевірити параметр `size` та значення S, M, L.
 6. Розгорнути `POST /v1/parcels`, перевірити приклади тіла запиту й відповіді `201`, `400`, `404`, `409`, `422`.
 7. Перевірити, що `GET /v1/parcels/{id}` має приклади успішної відповіді та помилок.
+
+## 3.1. Узгодження з засобом перевірки викладача
+
+- Для `POST /v1/parcels` додано `x-course: main` і заголовок `Idempotency-Key`. Їх підтримка сервером **поки не підтверджена**.
+- Приклади `normal`, `scarce` і `missing` беруть ідентифікатори з `web/src/main/resources/db/migration/V2__insert_test_data.sql`: `locker-0001` має S; у `locker-0002` є рівно одна вільна комірка L; `locker-does-not-exist` відсутній у демоданих.
+- У корені додано попередній `checks.yaml` за структурою `joint/checks-template.yaml` викладача. Наразі він містить лише Web і посилається на `contracts/openapi.yaml`. Налаштування DPC та спільний сценарій залишаються незавершеними.
+- Після цих змін **потрібно повторити імпорт у Swagger Editor та виконати незалежну перевірку лінтером**; попередні знімки екрана стосуються ранішої версії контракту.
 
 ## 4. Що поки не підтверджено
 
