@@ -242,7 +242,7 @@ DPC відповідає за оброблення закладання поси
 |---|---|---|
 | О1.1. Модель предметної області (Ядро) | — | — |
 | О1.2. Схема бази даних (Ядро) | — | — |
-| О1.3. Контракт API (Ядро) | — | — |
+| О1.3. Контракт API (Ядро) | [`contracts/openapi.yaml`](contracts/openapi.yaml): маршрути Web ЛР1, JSON-приклади, Problem Details, `x-course` | [Redocly CLI, успішна перевірка: 0 помилок, 2 попередження](https://github.com/elllenoshka/parcel_locker_system/actions/runs/45881801036); [опис перевірки](results/web-lr1/openapi-check.md). Потребує узгодження `recipientPhone` з БД |
 | О1.4. Головна операція (Ядро) | — | — |
 | О1.5. Список із курсором | — | — |
 | О1.6. Система, перевірка живучості й журнал | — | — |
@@ -311,7 +311,7 @@ DPC відповідає за оброблення закладання поси
 
 | Учасник | Реалізовані пункти й виконані досліди |
 |---|---|
-| Постнікова Олена ([@elllenoshka](https://github.com/elllenoshka)) | Створення GitHub-репозиторію, початкової структури, README, `.gitignore` та `.env.example` |
+| Постнікова Олена ([@elllenoshka](https://github.com/elllenoshka)) | Створення репозиторію та початкової структури, README, `.gitignore`, `.env.example`; Web О1.3 — доповнення OpenAPI, перевірка Swagger Editor і Redocly CLI, оформлення свідчень (PR №3) |
 | Мирошниченко Владислав ([@vladmyroshnychenko](https://github.com/vladmyroshnychenko)) | Буде доповнено |
 | Чех Ірина ([@irina-chekhkh](https://github.com/irina-chekhkh)) | Буде доповнено |
 | Мелєщук Єлізавета ([@MamaUtka](https://github.com/MamaUtka)) | Буде доповнено |
