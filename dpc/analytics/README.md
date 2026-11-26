@@ -25,7 +25,7 @@ mvn -f dpc/analytics/pom.xml test
 mvn -f dpc/analytics/pom.xml package
 ```
 
-Тести порівнюють Spark DataFrame та незалежний Java-еталон на тих самих даних. Очікується 7 груп, сума `parcel_count` = 8 і сума `picked_count` = 6. Це **очікувані контрольні значення**, доки немає підтвердженого успішного запуску CI.
+Тести порівнюють Spark DataFrame та незалежний Java-еталон на тих самих даних. Очікується 7 груп, сума `parcel_count` = 8 і сума `picked_count` = 6. Ці значення підтверджені автоматичним тестом: **4 тести, 0 помилок, 0 невдалих**. [Результат GitHub Actions](https://github.com/elllenoshka/parcel_locker_system/actions/runs/45883600659) (Java 21, Maven, локальна Spark-сесія у CI).
 
 ## Запуск Spark із готовим JAR
 
