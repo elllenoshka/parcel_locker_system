@@ -8,7 +8,7 @@ CREATE TABLE cell(
 	id text PRIMARY KEY,
 	locker_id text NOT NULL,
 	size text NOT NULL CHECK (size IN ('S','M','L')),
-	status text NOT NULL CHECK (status IN('free','occupied')),
+	status text NOT NULL CHECK (status IN('free','reserved','occupied')),
 	version bigint NOT NULL DEFAULT 1 CHECK(version > 0),
 	FOREIGN KEY (locker_id) REFERENCES locker (id)
 );
@@ -24,7 +24,7 @@ CREATE TABLE app_user (
 CREATE TABLE parcel(
 	id text PRIMARY KEY,
 	sender_id text NOT NULL REFERENCES app_user(id),
-    recipient_phone text NOT NULL,
+    recipient_phone text,
 	weight_g int NOT NULL CHECK ( weight_g > 0 ),
 	size text NOT NULL CHECK (size IN ('S','M','L')),
 	cell_id text NOT NULL REFERENCES cell(id),
