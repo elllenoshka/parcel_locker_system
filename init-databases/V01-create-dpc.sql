@@ -1,0 +1,3 @@
+CREATE USER dpc WITH PASSWORD 'dpc_local';
+
+CREATE DATABASE dpc OWNER dpc;
