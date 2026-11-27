@@ -1,0 +1,664 @@
+
+openapi: 3.1.0
+
+info:
+  title: Parcel Locker API
+  version: 1.0.0
+  description: API for parcel locker reservation system.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+# До ЛР3 авторизація не застосовується; X-User-Id — навчальний заголовок.
+security: []
+
+tags:
+  - name: Health
+    description: Service health check
+  - name: Lockers
+    description: Parcel locker information
+  - name: Parcels
+    description: Parcel reservation operations
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Check if the process is alive
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: The process is alive.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    examples:
+                      - UP
+              examples:
+                healthy:
+                  value:
+                    status: UP
+        '400':
+          description: Bad request.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /v1/lockers:
+    get:
+      tags:
+        - Lockers
+      summary: Get lockers with available cells
+      description: Returns lockers and the number of free cells for each size.
+      operationId: getLockers
+      parameters:
+        - name: size
+          in: query
+          required: false
+          description: >-
+            Filter lockers by available cell size. When provided, return only
+            lockers with at least one free cell of the requested size.
+          schema:
+            type: string
+            enum:
+              - S
+              - M
+              - L
+          examples:
+            medium:
+              summary: Find lockers with available M cells
+              value: M
+      responses:
+        '200':
+          description: List of lockers retrieved successfully.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LockerListResponse'
+              examples:
+                availableLockers:
+                  summary: Lockers with available cells
+                  value:
+                    items:
+                      - id: locker-0001
+                        address: Sumskaya 150
+                        tz: Europe/Kyiv
+                        freeCells:
+                          S: 5
+                          M: 3
+                          L: 2
+        '400':
+          description: Bad request.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /v1/parcels:
+    get:
+      tags:
+        - Parcels
+      summary: Get parcels
+      description: >
+        Returns parcels created by the user specified in X-User-Id.
+        Parcels are ordered by createdAt descending and then by id descending.
+        The cursor is opaque and is used to retrieve the next page.
+      operationId: listParcels
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          description: Identifier of the current user.
+          schema:
+            type: string
+          example: u-user-1
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of parcels returned per page.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - name: cursor
+          in: query
+          required: false
+          description: Opaque cursor returned by the previous page.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Parcel page retrieved successfully.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParcelListResponse'
+              examples:
+                firstPage:
+                  summary: First page with a next cursor
+                  value:
+                    items:
+                      - id: parcel-001
+                        lockerId: locker-0001
+                        cellId: cell-001
+                        recipientPhone: '+380501234567'
+                        weightG: 1200
+                        size: M
+                        status: held
+                        createdAt: '2026-11-20T10:00:00Z'
+                        expiresAt: '2026-11-21T10:00:00Z'
+                    nextCursor: opaque-cursor-value
+                lastPage:
+                  summary: Last page
+                  value:
+                    items:
+                      - id: parcel-002
+                        lockerId: locker-0001
+                        cellId: cell-002
+                        recipientPhone: '+380671234567'
+                        weightG: 800
+                        size: S
+                        status: dropped
+                        createdAt: '2026-11-19T12:00:00Z'
+                        expiresAt: '2026-11-20T12:00:00Z'
+                    nextCursor: null
+        '400':
+          description: Invalid query parameters or cursor.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                invalidCursor:
+                  summary: Invalid cursor
+                  value:
+                    type: about:blank
+                    title: Bad Request
+                    status: 400
+                    detail: The provided cursor is invalid.
+
+    post:
+      tags:
+        - Parcels
+      summary: Create parcel and reserve a cell
+      description: >
+        Creates a parcel and reserves the smallest suitable free cell
+        (S, M, or L) in the selected locker.
+        The reservation expires after 24 hours.
+        Parcel creation and cell reservation are performed atomically
+        in one transaction.
+      operationId: createParcel
+      x-course: main
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Repeat the same request with the same key to obtain the saved result.
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 128
+          examples:
+            reservation:
+              value: reserve-20261126-001
+        - name: X-User-Id
+          in: header
+          required: true
+          description: Identifier of the sender.
+          schema:
+            type: string
+          example: u-user-1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateParcelRequest'
+            examples:
+              normal:
+                summary: Звичайне бронювання комірки S
+                value:
+                  lockerId: locker-0001
+                  recipientPhone: '+380501234567'
+                  weightG: 1200
+                  size: S
+              scarce:
+                summary: Остання вільна комірка L у locker-0002
+                description: За початковими даними V2 у locker-0002 є одна комірка L.
+                value:
+                  lockerId: locker-0002
+                  recipientPhone: '+380671234567'
+                  weightG: 2500
+                  size: L
+                x-capacity: 1
+              missing:
+                summary: Неіснуючий поштомат — очікується 404
+                value:
+                  lockerId: locker-does-not-exist
+                  recipientPhone: '+380501234567'
+                  weightG: 1200
+                  size: S
+      responses:
+        '201':
+          description: Parcel created and cell reserved successfully.
+          headers:
+            Location:
+              description: URL of the created parcel.
+              schema:
+                type: string
+              example: /v1/parcels/parcel-001
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateParcelResponse'
+              examples:
+                created:
+                  summary: Successfully created parcel
+                  value:
+                    id: parcel-001
+                    cellId: cell-001
+                    status: held
+                    createdAt: '2026-11-20T10:00:00Z'
+                    expiresAt: '2026-11-21T10:00:00Z'
+        '400':
+          description: Invalid JSON or malformed request.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                invalidJson:
+                  value:
+                    type: about:blank
+                    title: Bad Request
+                    status: 400
+                    detail: Request body contains invalid JSON.
+        '404':
+          description: Locker or referenced resource not found.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                lockerNotFound:
+                  value:
+                    type: about:blank
+                    title: Not Found
+                    status: 404
+                    detail: The specified locker was not found.
+        '409':
+          description: No suitable free cell is available.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                noFreeCell:
+                  value:
+                    type: about:blank
+                    title: Conflict
+                    status: 409
+                    detail: No suitable free cell is available in this locker.
+        '422':
+          description: Request data is syntactically valid but semantically invalid.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                invalidWeight:
+                  value:
+                    type: about:blank
+                    title: Unprocessable Content
+                    status: 422
+                    detail: Parcel weight must be greater than zero.
+
+  /v1/parcels/{id}:
+    get:
+      tags:
+        - Parcels
+      summary: Get parcel by ID
+      description: Returns a parcel accessible to the current user.
+      operationId: getParcelById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Parcel identifier.
+          schema:
+            type: string
+          example: parcel-001
+        - name: X-User-Id
+          in: header
+          required: true
+          description: Identifier of the current user.
+          schema:
+            type: string
+          example: u-user-1
+      responses:
+        '200':
+          description: Parcel retrieved successfully.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParcelListItem'
+              examples:
+                parcel:
+                  summary: Reserved parcel
+                  value:
+                    id: parcel-001
+                    lockerId: locker-0001
+                    cellId: c01-02
+                    recipientPhone: '+380501234567'
+                    weightG: 1200
+                    size: M
+                    status: held
+                    createdAt: '2026-11-20T10:00:00Z'
+                    expiresAt: '2026-11-21T10:00:00Z'
+        '400':
+          description: Invalid parcel identifier.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                invalidId:
+                  value:
+                    type: about:blank
+                    title: Bad Request
+                    status: 400
+                    detail: Invalid parcel identifier.
+        '404':
+          description: Parcel not found or not accessible to the user.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                notFound:
+                  value:
+                    type: about:blank
+                    title: Not Found
+                    status: 404
+                    detail: Parcel not found.
+
+components:
+  headers:
+    X-Request-ID:
+      description: Unique identifier of the HTTP request.
+      schema:
+        type: string
+      example: req-123456
+
+  schemas:
+    LockerListResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Locker'
+
+    Locker:
+      type: object
+      required:
+        - id
+        - address
+        - tz
+        - freeCells
+      properties:
+        id:
+          type: string
+          examples:
+            - locker-0001
+        address:
+          type: string
+          examples:
+            - Sumskaya 150
+        tz:
+          type: string
+          examples:
+            - Europe/Kyiv
+        freeCells:
+          type: object
+          required:
+            - S
+            - M
+            - L
+          properties:
+            S:
+              type: integer
+              minimum: 0
+              examples:
+                - 5
+            M:
+              type: integer
+              minimum: 0
+              examples:
+                - 3
+            L:
+              type: integer
+              minimum: 0
+              examples:
+                - 2
+
+    ParcelListItem:
+      type: object
+      required:
+        - id
+        - lockerId
+        - cellId
+        - recipientPhone
+        - weightG
+        - size
+        - status
+        - createdAt
+        - expiresAt
+      properties:
+        id:
+          type: string
+          examples:
+            - parcel-001
+        lockerId:
+          type: string
+          examples:
+            - locker-0001
+        cellId:
+          type: string
+          examples:
+            - cell-001
+        recipientPhone:
+          type: string
+          examples:
+            - '+380501234567'
+        weightG:
+          type: integer
+          minimum: 1
+          examples:
+            - 1200
+        size:
+          type: string
+          enum:
+            - S
+            - M
+            - L
+        status:
+          type: string
+          enum:
+            - held
+            - dropped
+            - picked
+            - returned
+            - expired
+            - cancelled
+        createdAt:
+          type: string
+          format: date-time
+          examples:
+            - '2026-11-20T10:00:00Z'
+        expiresAt:
+          type: string
+          format: date-time
+          examples:
+            - '2026-11-21T10:00:00Z'
+
+    ParcelListResponse:
+      type: object
+      required:
+        - items
+        - nextCursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParcelListItem'
+        nextCursor:
+          type:
+            - string
+            - 'null'
+          description: Opaque cursor for the next page, or null if there are no more pages.
+          examples:
+            - opaque-cursor-value
+
+    CreateParcelRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - lockerId
+        - recipientPhone
+        - weightG
+        - size
+      properties:
+        lockerId:
+          type: string
+          examples:
+            - locker-0001
+        recipientPhone:
+          type: string
+          examples:
+            - '+380501234567'
+        weightG:
+          type: integer
+          minimum: 1
+          examples:
+            - 1200
+        size:
+          type: string
+          enum:
+            - S
+            - M
+            - L
+
+    CreateParcelResponse:
+      type: object
+      required:
+        - id
+        - cellId
+        - status
+        - createdAt
+        - expiresAt
+      properties:
+        id:
+          type: string
+          examples:
+            - parcel-001
+        cellId:
+          type: string
+          examples:
+            - cell-001
+        status:
+          type: string
+          enum:
+            - held
+          examples:
+            - held
+        createdAt:
+          type: string
+          format: date-time
+          examples:
+            - '2026-11-20T10:00:00Z'
+        expiresAt:
+          type: string
+          format: date-time
+          examples:
+            - '2026-11-21T10:00:00Z'
+
+    Problem:
+      type: object
+      description: Problem Details response.
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          examples:
+            - about:blank
+        title:
+          type: string
+          examples:
+            - Bad Request
+        status:
+          type: integer
+          examples:
+            - 400
+        detail:
+          type: string
+          examples:
+            - The request is invalid.
+        instance:
+          type: string
+          format: uri-reference
+      required:
+        - title
+        - status

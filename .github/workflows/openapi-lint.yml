@@ -1,0 +1,25 @@
+name: OpenAPI lint
+
+on:
+  pull_request:
+    paths:
+      - 'contracts/openapi.yaml'
+      - '.github/workflows/openapi-lint.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-openapi:
+    name: Lint Web OpenAPI 3.1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Lint contracts/openapi.yaml
+        run: npx --yes @redocly/cli@2.83.0 lint contracts/openapi.yaml
