@@ -1,7 +1,7 @@
 x-server: &web-server
   build: ./web
   environment: &web-server-env
-    DATABASE_URL: postgresql://app:app@postgres:5432/app
+    DATABASE_URL: postgresql://app:app@postgres:5433/app
   depends_on:
     postgres:
       condition: service_healthy
