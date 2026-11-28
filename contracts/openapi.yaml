@@ -10,6 +10,9 @@ servers:
   - url: http://localhost:8080
     description: Local development server
 
+# До ЛР3 авторизація не застосовується; X-User-Id — навчальний заголовок.
+security: []
+
 tags:
   - name: Health
     description: Service health check
@@ -39,7 +42,8 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: UP
+                    examples:
+                      - UP
               examples:
                 healthy:
                   value:
@@ -61,6 +65,23 @@ paths:
       summary: Get lockers with available cells
       description: Returns lockers and the number of free cells for each size.
       operationId: getLockers
+      parameters:
+        - name: size
+          in: query
+          required: false
+          description: >-
+            Filter lockers by available cell size. When provided, return only
+            lockers with at least one free cell of the requested size.
+          schema:
+            type: string
+            enum:
+              - S
+              - M
+              - L
+          examples:
+            medium:
+              summary: Find lockers with available M cells
+              value: M
       responses:
         '200':
           description: List of lockers retrieved successfully.
@@ -110,7 +131,7 @@ paths:
           description: Identifier of the current user.
           schema:
             type: string
-          example: user-001
+          example: u-user-1
         - name: limit
           in: query
           required: false
@@ -194,14 +215,26 @@ paths:
         Parcel creation and cell reservation are performed atomically
         in one transaction.
       operationId: createParcel
+      x-course: main
       parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Repeat the same request with the same key to obtain the saved result.
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 128
+          examples:
+            reservation:
+              value: reserve-20261126-001
         - name: X-User-Id
           in: header
           required: true
           description: Identifier of the sender.
           schema:
             type: string
-          example: user-001
+          example: u-user-1
       requestBody:
         required: true
         content:
@@ -209,20 +242,29 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateParcelRequest'
             examples:
-              createSmallParcel:
-                summary: Create a small parcel
+              normal:
+                summary: Звичайне бронювання комірки S
                 value:
                   lockerId: locker-0001
                   recipientPhone: '+380501234567'
                   weightG: 1200
                   size: S
-              createMediumParcel:
-                summary: Create a medium parcel
+              scarce:
+                summary: Остання вільна комірка L у locker-0002
+                description: За початковими даними V2 у locker-0002 є одна комірка L.
                 value:
-                  lockerId: locker-0001
+                  lockerId: locker-0002
                   recipientPhone: '+380671234567'
                   weightG: 2500
-                  size: M
+                  size: L
+                x-capacity: 1
+              missing:
+                summary: Неіснуючий поштомат — очікується 404
+                value:
+                  lockerId: locker-does-not-exist
+                  recipientPhone: '+380501234567'
+                  weightG: 1200
+                  size: S
       responses:
         '201':
           description: Parcel created and cell reserved successfully.
@@ -312,6 +354,84 @@ paths:
                     status: 422
                     detail: Parcel weight must be greater than zero.
 
+  /v1/parcels/{id}:
+    get:
+      tags:
+        - Parcels
+      summary: Get parcel by ID
+      description: Returns a parcel accessible to the current user.
+      operationId: getParcelById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Parcel identifier.
+          schema:
+            type: string
+          example: parcel-001
+        - name: X-User-Id
+          in: header
+          required: true
+          description: Identifier of the current user.
+          schema:
+            type: string
+          example: u-user-1
+      responses:
+        '200':
+          description: Parcel retrieved successfully.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParcelListItem'
+              examples:
+                parcel:
+                  summary: Reserved parcel
+                  value:
+                    id: parcel-001
+                    lockerId: locker-0001
+                    cellId: c01-02
+                    recipientPhone: '+380501234567'
+                    weightG: 1200
+                    size: M
+                    status: held
+                    createdAt: '2026-11-20T10:00:00Z'
+                    expiresAt: '2026-11-21T10:00:00Z'
+        '400':
+          description: Invalid parcel identifier.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                invalidId:
+                  value:
+                    type: about:blank
+                    title: Bad Request
+                    status: 400
+                    detail: Invalid parcel identifier.
+        '404':
+          description: Parcel not found or not accessible to the user.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/X-Request-ID'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                notFound:
+                  value:
+                    type: about:blank
+                    title: Not Found
+                    status: 404
+                    detail: Parcel not found.
+
 components:
   headers:
     X-Request-ID:
@@ -341,13 +461,16 @@ components:
       properties:
         id:
           type: string
-          example: locker-0001
+          examples:
+            - locker-0001
         address:
           type: string
-          example: Sumskaya 150
+          examples:
+            - Sumskaya 150
         tz:
           type: string
-          example: Europe/Kyiv
+          examples:
+            - Europe/Kyiv
         freeCells:
           type: object
           required:
@@ -358,15 +481,18 @@ components:
             S:
               type: integer
               minimum: 0
-              example: 5
+              examples:
+                - 5
             M:
               type: integer
               minimum: 0
-              example: 3
+              examples:
+                - 3
             L:
               type: integer
               minimum: 0
-              example: 2
+              examples:
+                - 2
 
     ParcelListItem:
       type: object
@@ -383,20 +509,25 @@ components:
       properties:
         id:
           type: string
-          example: parcel-001
+          examples:
+            - parcel-001
         lockerId:
           type: string
-          example: locker-0001
+          examples:
+            - locker-0001
         cellId:
           type: string
-          example: cell-001
+          examples:
+            - cell-001
         recipientPhone:
           type: string
-          example: '+380501234567'
+          examples:
+            - '+380501234567'
         weightG:
           type: integer
           minimum: 1
-          example: 1200
+          examples:
+            - 1200
         size:
           type: string
           enum:
@@ -415,11 +546,13 @@ components:
         createdAt:
           type: string
           format: date-time
-          example: '2026-11-20T10:00:00Z'
+          examples:
+            - '2026-11-20T10:00:00Z'
         expiresAt:
           type: string
           format: date-time
-          example: '2026-11-21T10:00:00Z'
+          examples:
+            - '2026-11-21T10:00:00Z'
 
     ParcelListResponse:
       type: object
@@ -436,7 +569,8 @@ components:
             - string
             - 'null'
           description: Opaque cursor for the next page, or null if there are no more pages.
-          example: opaque-cursor-value
+          examples:
+            - opaque-cursor-value
 
     CreateParcelRequest:
       type: object
@@ -449,14 +583,17 @@ components:
       properties:
         lockerId:
           type: string
-          example: locker-0001
+          examples:
+            - locker-0001
         recipientPhone:
           type: string
-          example: '+380501234567'
+          examples:
+            - '+380501234567'
         weightG:
           type: integer
           minimum: 1
-          example: 1200
+          examples:
+            - 1200
         size:
           type: string
           enum:
@@ -475,23 +612,28 @@ components:
       properties:
         id:
           type: string
-          example: parcel-001
+          examples:
+            - parcel-001
         cellId:
           type: string
-          example: cell-001
+          examples:
+            - cell-001
         status:
           type: string
           enum:
             - held
-          example: held
+          examples:
+            - held
         createdAt:
           type: string
           format: date-time
-          example: '2026-11-20T10:00:00Z'
+          examples:
+            - '2026-11-20T10:00:00Z'
         expiresAt:
           type: string
           format: date-time
-          example: '2026-11-21T10:00:00Z'
+          examples:
+            - '2026-11-21T10:00:00Z'
 
     Problem:
       type: object
@@ -500,16 +642,20 @@ components:
         type:
           type: string
           format: uri-reference
-          example: about:blank
+          examples:
+            - about:blank
         title:
           type: string
-          example: Bad Request
+          examples:
+            - Bad Request
         status:
           type: integer
-          example: 400
+          examples:
+            - 400
         detail:
           type: string
-          example: The request is invalid.
+          examples:
+            - The request is invalid.
         instance:
           type: string
           format: uri-reference

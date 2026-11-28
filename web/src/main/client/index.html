@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Поштомати — бронювання</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header class="header">
+    <span class="brand">ПОШТОМАТИ</span>
+</header>
+
+<main class="workspace">
+    <section class="intro">
+        <p class="eyebrow">Бронювання комірки</p>
+
+        <h1>Місце для<br>вашої посилки.</h1>
+
+        <p class="description">
+            Оберіть поштомат і розмір комірки.
+            Бронювання діє протягом 24 годин.
+        </p>
+    </section>
+
+    <div class="booking">
+        <form id="reservation-form">
+            <div class="field">
+                <label for="locker">Поштомат</label>
+                <select id="locker" name="locker_id" required>
+                    <option value="">Оберіть поштомат</option>
+                    <option value="locker-0001">
+                        вул. Сумська, 150
+                    </option>
+                    <option value="locker-0002">
+                        просп. Науки, 200
+                    </option>
+                </select>
+            </div>
+
+            <div class="field-row">
+                <div class="field">
+                    <label for="size">Розмір посилки</label>
+                    <select id="size" name="size" required>
+                        <option value="">Оберіть розмір</option>
+                        <option value="S">S — мала</option>
+                        <option value="M">M — середня</option>
+                        <option value="L">L — велика</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="weight">Вага, г</label>
+                    <input
+                            id="weight"
+                            name="weight_g"
+                            type="number"
+                            min="1"
+                            max="2147483647"
+                            step="1"
+                            placeholder="1500"
+                            required
+                    >
+                </div>
+            </div>
+
+            <button type="submit" disabled>
+                Забронювати комірку
+            </button>
+        </form>
+
+        <section class="result" aria-labelledby="result-heading">
+            <h2 id="result-heading">Результат бронювання</h2>
+            <p id="reservation-result" role="status">
+                Тут з’явиться підтвердження або повідомлення про помилку.
+            </p>
+        </section>
+    </div>
+</main>
+</body>
+</html>
