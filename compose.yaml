@@ -1,3 +1,13 @@
+x-server: &web-server
+  build: ./web
+  environment: &web-server-env
+    DATABASE_URL: postgresql://app:app@postgres:5432/app
+  depends_on:
+    postgres:
+      condition: service_healthy
+  restart: unless-stopped
+  stop_grace_period: 30s
+
 services:
   postgres:
     image: postgres:17.11
@@ -16,6 +26,32 @@ services:
       interval: 2s
       timeout: 5s
       retries: 30
+
+  app-a:
+    <<: *web-server
+    environment:
+      <<: *web-server-env
+      INSTANCE: app-a
+    ports:
+      - "${APP_A_PORT:-8001}:8000"
+  app-b:
+    <<: *web-server
+    environment:
+      <<: *web-server-env
+      INSTANCE: app-b
+    ports:
+      - "${APP_B_PORT:-8002}:8000"
+
+#  TODO Add path to nginx
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "${NGINX_PORT:-8080}:80"
+    depends_on:
+      - app-a
+      - app-b
+    restart: unless-stopped
+
 
 volumes:
   pgdata:
