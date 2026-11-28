@@ -8,9 +8,6 @@ x-server: &web-server
   restart: unless-stopped
   stop_grace_period: 30s
 
-
-
-
 services:
   postgres:
     image: postgres:17.11
@@ -44,6 +41,7 @@ services:
     ports:
       - "${APP_B_PORT:-8002}:8000"
 
+#  TODO Add path to nginx
   nginx:
     image: nginx:1.27-alpine
     ports:
